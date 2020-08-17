@@ -1,0 +1,37 @@
+ hosts: cliente
+  remote_user: ansible
+  become: yes
+
+  tasks:
+  - name: Instalar servicio httpd
+    yum:
+      name: httpd
+      state: latest
+
+  - name: Habilitar apache
+    service:
+      name:  httpd
+      state: started
+      enabled: yes
+
+
+  - name: Abrir puerto HTTP y HTTPS en firewall
+    firewalld:
+      service: "http, https"
+      state: enabled
+      permanent: yes
+      immediate: yes
+
+
+  - name: Verificacion de servicios
+    service:
+      name: httpd
+      state: started
+      enabled: yes
+
+
+  handlers:
+  - name: Reiniciar httpd
+    service:
+      name: httpd
+      state: restarted

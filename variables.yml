@@ -1,0 +1,8 @@
+---
+#Variables para el balanceo de carga
+nombre_cluster: loadbalancer
+cliente: cliente
+servidor: servidor
+puerto1: 8080
+puerto2: 8080
+red_autorizada: 192.168.1.0/24

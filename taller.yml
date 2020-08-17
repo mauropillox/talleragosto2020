@@ -1,14 +1,53 @@
- hosts: cliente
+- hosts: cliente
   remote_user: ansible
   become: yes
+  become_method: sudo
+    sitio: ejemplo
+    server: www.ejemplo.com.uy
+    hostmaster: admin@ejemplo.com.uy
+   
+  vars_files:
+  - variables.yml
+
+  roles:
+  - role: apache-centos
+    when: ansible_facts['os_family'] == "RedHat"
+  - role: apache-debian
+    when: ansible_facts['os_family'] == "Debian"
+  
+  - name: Create loadbalancer configuration
+    template:
+        src: templates/{{ sitio }}.j2
+        dest: /etc/httpd/vhost.d/{{ sitio }}.conf
+        owner: root
+        mode: '0644'
+    notify: Restart httpd
 
   tasks:
+  - name: Instalar servidor Apache
+    yum:
+        name: httpd
+        state: latest
+       
+   - name: Create virtualhosts config directory
+     file:
+        path: /etc/httpd/vhost.d
+        state: directory
+        mode: '0755'
+        owner: root
+        
+    - name: Add virtualhost config directory to httpd.conf
+      lineinfile:
+        path: /etc/httpd/conf/httpd.conf
+        line: IncludeOptional vhost.d/*.conf
+  
+  
   - name: Instalar servicio httpd
     yum:
       name: httpd
       state: latest
 
-  - name: Habilitar apache
+  - name: Habilitar servicios httpd
     service:
       name:  httpd
       state: started
@@ -17,10 +56,13 @@
 
   - name: Abrir puerto HTTP y HTTPS en firewall
     firewalld:
-      service: "http, https"
+      service: "{{ item }}"
       state: enabled
       permanent: yes
       immediate: yes
+    loop:
+      - http
+      - https
 
 
   - name: Verificacion de servicios
